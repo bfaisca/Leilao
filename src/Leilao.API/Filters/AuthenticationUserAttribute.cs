@@ -1,4 +1,5 @@
-﻿using Leilao.API.Repositories;
+﻿using Leilao.API.Contracts;
+using Leilao.API.Repositories;
 using Leilao.API.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -9,20 +10,20 @@ namespace Leilao.API.Filters;
 
 public class AuthenticationUserAttribute : AuthorizeAttribute, IAuthorizationFilter
 {
+    public IUserRepository _repository;
+
+    public AuthenticationUserAttribute(IUserRepository repository) => _repository = repository;
     public void OnAuthorization(AuthorizationFilterContext context)
     {
         try
         {
-
             var util = new Util();
 
             var token = util.TokenOnRequest(context.HttpContext);
 
-            var reposiory = new LeilaoDbContext();
-
             var email = util.FromBase64String(token);
 
-            var exist = reposiory.Users.Any(user => user.Email.Equals(email));
+            var exist = _repository.ExistUserWithEmail(email);
 
             if (exist == false)
             {
